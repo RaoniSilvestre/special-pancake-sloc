@@ -1,20 +1,14 @@
-use clap::{arg, Command};
-use core::panic;
-use search::print_info;
-use search::search_tree;
-use search::FileInfo;
+use search::display::print_info;
+use search::search::search_tree;
+use search::structs::FileInfo;
+
 use std::collections::HashMap;
+
+mod cli;
 mod search;
+
 fn main() {
-    let matches = Command::new("sloc-rust")
-        .about("Pega informações de todos os arquivos na pasta escolhida.")
-        .arg(arg!(<PATH>).help("Caminho para fazer busca!"))
-        .arg(
-            arg!(--recursive "Ativa busca recursiva!")
-                .short('r')
-                .required(false),
-        )
-        .get_matches();
+    let matches = cli::get_opts();
 
     match matches.get_one::<String>("PATH") {
         Some(path) => {
