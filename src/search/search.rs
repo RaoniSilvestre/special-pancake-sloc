@@ -1,4 +1,4 @@
-use crate::search::calculate::calculate_file_info;
+use crate::search::calculate::open_file;
 
 use crate::FileInfo;
 
@@ -60,7 +60,7 @@ fn call_calculate_file_info(
         .expect("Não foi possível converter entry_path : PathBuf -> entry_path_str &str");
 
     if metadata.is_file() && is_readable(entry_path_str) {
-        calculate_file_info(entry_path_str, informações)
+        open_file(entry_path_str, informações)
     }
     if metadata.is_dir() && !is_forbidden_directories(entry_path_str) && is_recursive {
         search_tree(&entry_path_str, informações, is_recursive)

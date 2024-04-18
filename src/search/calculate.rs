@@ -5,7 +5,7 @@ use std::collections::HashMap;
 
 use crate::FileInfo;
 
-pub fn calculate_file_info(path: &str, informações: &mut HashMap<String, FileInfo>) {
+pub fn open_file(path: &str, informações: &mut HashMap<String, FileInfo>) {
     let arquivo_result = File::open(path);
 
     match arquivo_result {
@@ -31,9 +31,8 @@ fn read_arquivo(arquivo: &mut File, path: &str, informações: &mut HashMap<Stri
 
 fn iterate_over_lines(conteudo: String) -> FileInfo {
     let mut file_info = FileInfo::new();
-
     for line in conteudo.lines() {
-        if line.trim().contains("#") || line.trim().contains("//") {
+        if line.trim().starts_with("#") || line.trim().starts_with("//") {
             file_info.comment += 1;
         } else if line.trim().is_empty() {
             file_info.whitespace += 1;
