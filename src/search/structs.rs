@@ -18,3 +18,13 @@ impl Add for FileInfo {
         }
     }
 }
+
+impl FileInfo {
+    pub fn new() -> FileInfo {
+        FileInfo {
+            code: 0,
+            whitespace: 0,
+            comment: 0,
+        }
+    }
+}
