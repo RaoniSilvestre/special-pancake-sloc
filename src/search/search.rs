@@ -12,31 +12,37 @@ use std::io::Read;
 
 const LOCKED_DIRS: [&str; 3] = ["/target", "/.git", "/node_modules"];
 
-pub fn search_tree(path: &str, informações: &mut HashMap<String, FileInfo>) {
+pub fn search_tree(path: &str, informações: &mut HashMap<String, FileInfo>, is_recursive: bool) {
     let entries_result = read_dir(path);
 
     match entries_result {
-        Ok(entries) => iterate_over_dir(entries, informações),
+        Ok(entries) => iterate_over_dir(entries, informações, is_recursive),
         Err(e) => eprintln!("Erro! {}", e),
     }
 }
 
-fn iterate_over_dir(entries: ReadDir, informações: &mut HashMap<String, FileInfo>) {
+fn iterate_over_dir(
+    entries: ReadDir,
+    informações: &mut HashMap<String, FileInfo>,
+    is_recursive: bool,
+) {
     for entry_result in entries {
         match entry_result {
             Ok(entry) => {
-                get_metadata(entry, informações);
+                get_metadata(entry, informações, is_recursive);
             }
             Err(e) => eprintln!("Erro! {}", e),
         }
     }
 }
 
-fn get_metadata(entry: DirEntry, informações: &mut HashMap<String, FileInfo>) {
+fn get_metadata(
+    entry: DirEntry, informações: &mut HashMap<String, FileInfo>, is_recursive: bool
+) {
     let metadata_result = entry.metadata();
 
     match metadata_result {
-        Ok(metadata) => call_calculate_file_info(entry, metadata, informações),
+        Ok(metadata) => call_calculate_file_info(entry, metadata, informações, is_recursive),
         Err(e) => eprintln!("Erro! {}", e),
     }
 }
@@ -45,6 +51,7 @@ fn call_calculate_file_info(
     entry: DirEntry,
     metadata: Metadata,
     informações: &mut HashMap<String, FileInfo>,
+    is_recursive: bool,
 ) {
     let entry_path = entry.path();
 
@@ -55,8 +62,8 @@ fn call_calculate_file_info(
     if metadata.is_file() && is_readable(entry_path_str) {
         calculate_file_info(entry_path_str, informações)
     }
-    if metadata.is_dir() && !is_forbidden_directories(entry_path_str) {
-        search_tree(&entry_path_str, informações)
+    if metadata.is_dir() && !is_forbidden_directories(entry_path_str) && is_recursive {
+        search_tree(&entry_path_str, informações, is_recursive)
     }
 }
 

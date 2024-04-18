@@ -13,7 +13,8 @@ fn main() {
     match matches.get_one::<String>("PATH") {
         Some(path) => {
             let mut informações: HashMap<String, FileInfo> = HashMap::new();
-            search_tree(path, &mut informações);
+
+            search_tree(path, &mut informações, matches.get_flag("recursive"));
             print_info(&informações);
         }
         None => {
