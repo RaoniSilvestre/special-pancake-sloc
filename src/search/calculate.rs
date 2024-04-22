@@ -22,7 +22,6 @@ fn read_arquivo(arquivo: &mut File, path: &str, informações: &mut HashMap<Stri
     match file_to_string_try {
         Ok(_) => {
             let file_info_new = iterate_over_lines(buffer);
-
             update_hash_info(file_info_new, informações, path)
         }
         Err(_e) => (), // eprintln!("\nErro ao converter para string!\nNo arquivo {}\nMotivo: {}\n",path, e) ,

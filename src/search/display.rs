@@ -48,8 +48,6 @@ pub fn print_info(informações: &HashMap<String, FileInfo>) {
         )
     }
 
-    ln();
-
     println!(
         "| {:<36} | {:<18} | {:<18} | {:<18} |",
         "TOTAL", total_file_info.code, total_file_info.comment, total_file_info.whitespace
@@ -58,6 +56,8 @@ pub fn print_info(informações: &HashMap<String, FileInfo>) {
     ln();
     most_used_files = my_cool_sort(most_used_files);
 
+    println!("\n\n");
+    ln();
     println!(
         "| {:<36} | {:<18} | {:<18} | {:<18} |",
         "MOST USED EXT", most_used_files[2].0, most_used_files[1].0, most_used_files[0].0
@@ -72,7 +72,7 @@ pub fn print_info(informações: &HashMap<String, FileInfo>) {
 
     ln();
     println!(
-        "| {:<36} | {:<18.3} | {:<18.3} | {:>17.3}% |",
+        "| {:<36} | {:17.3}% | {:>17.3}% | {:>17.3}% |",
         "PORCENTAGEM",
         most_used_files_percentage[2],
         most_used_files_percentage[1],
