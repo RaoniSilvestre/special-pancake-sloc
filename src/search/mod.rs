@@ -1,4 +1,12 @@
-pub mod calculate;
-pub mod display;
+use crate::infra::FileInfo;
+use std::{collections::BTreeMap, path::PathBuf};
+
 pub mod search;
-pub mod structs;
+
+#[derive(Debug)]
+pub struct Searcher {
+    root_path: PathBuf,
+    ignored_directories: Vec<String>,
+    is_recursive: bool,
+    pub result: BTreeMap<String, FileInfo>,
+}

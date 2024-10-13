@@ -1,92 +1,124 @@
-use crate::search::calculate::open_file;
+use crate::config::Configuration;
+use crate::infra::FileInfo;
+use crate::process::Processor;
 
-use crate::FileInfo;
+use super::Searcher;
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::fs::read_dir;
 use std::fs::DirEntry;
 use std::fs::File;
 use std::fs::Metadata;
 use std::fs::ReadDir;
+use std::io::Error;
 use std::io::Read;
+use std::path::PathBuf;
 
-const LOCKED_DIRS: [&str; 3] = ["/target", "/.git", "/node_modules"];
+impl Searcher {
+    pub fn new(configuration: Configuration) -> Searcher {
+        let ignored_directories = vec!["/target", "/.git", "/node_modules"]
+            .into_iter()
+            .map(|str| String::from(str))
+            .collect();
 
-pub fn search_tree(path: &str, informações: &mut HashMap<String, FileInfo>, is_recursive: bool) {
-    let entries_result = read_dir(path);
-
-    match entries_result {
-        Ok(entries) => iterate_over_dir(entries, informações, is_recursive),
-        Err(e) => eprintln!("Erro! {}", e),
-    }
-}
-
-fn iterate_over_dir(
-    entries: ReadDir,
-    informações: &mut HashMap<String, FileInfo>,
-    is_recursive: bool,
-) {
-    for entry_result in entries {
-        match entry_result {
-            Ok(entry) => {
-                get_metadata(entry, informações, is_recursive);
-            }
-            Err(e) => eprintln!("Erro! {}", e),
+        Searcher {
+            root_path: configuration.path,
+            is_recursive: configuration.recursive,
+            ignored_directories,
+            result: BTreeMap::new(),
         }
     }
-}
 
-fn get_metadata(
-    entry: DirEntry, informações: &mut HashMap<String, FileInfo>, is_recursive: bool
-) {
-    let metadata_result = entry.metadata();
-
-    match metadata_result {
-        Ok(metadata) => call_calculate_file_info(entry, metadata, informações, is_recursive),
-        Err(e) => eprintln!("Erro! {}", e),
+    pub fn search(&mut self) {
+        match read_dir(&self.root_path) {
+            Ok(directory_iterator) => self.iterate(directory_iterator),
+            Err(_) => (),
+        }
     }
-}
 
-fn call_calculate_file_info(
-    entry: DirEntry,
-    metadata: Metadata,
-    informações: &mut HashMap<String, FileInfo>,
-    is_recursive: bool,
-) {
-    let entry_path = entry.path();
-
-    let entry_path_str = entry_path
-        .to_str()
-        .expect("Não foi possível converter entry_path : PathBuf -> entry_path_str &str");
-
-    if metadata.is_file() && is_readable(entry_path_str) {
-        open_file(entry_path_str, informações)
+    fn search_dir(&mut self, directory: PathBuf) {
+        match read_dir(&directory) {
+            Ok(directory_iterator) => self.iterate(directory_iterator),
+            Err(_) => (),
+        }
     }
-    if metadata.is_dir() && !is_forbidden_directories(entry_path_str) && is_recursive {
-        search_tree(&entry_path_str, informações, is_recursive)
-    }
-}
 
-fn is_readable(file_path: &str) -> bool {
-    let file = File::open(file_path);
-    let mut buffer = String::new();
-    match file {
-        Ok(mut file) => {
-            let wasread = file.read_to_string(&mut buffer);
-            match wasread {
-                Ok(_) => true,
-                Err(_) => false,
+    fn iterate(&mut self, directory_iterator: ReadDir) {
+        for iterator_item in directory_iterator {
+            self.process_item(iterator_item)
+        }
+    }
+
+    fn process_item(&mut self, iterator_item: Result<DirEntry, Error>) {
+        match iterator_item {
+            Ok(file) => self.process_file(file),
+            Err(ref iterator_error) => {
+                eprintln!("Erro: {iterator_error}\nNo arquivo: {iterator_item:?}")
             }
         }
-        Err(_) => false,
     }
-}
 
-fn is_forbidden_directories(entry_path_str: &str) -> bool {
-    for element in LOCKED_DIRS {
-        if entry_path_str.contains(element) {
-            return true;
+    fn process_file(&mut self, dir_entry: DirEntry) {
+        let metadata = Self::get_metadata(&dir_entry);
+
+        if metadata.is_file() && Self::is_readable(dir_entry.path()) {
+            let processed_file_info = match File::open(dir_entry.path()) {
+                Ok(file) => Processor::process(file),
+                Err(_) => FileInfo::default(),
+            };
+
+            let extension = dir_entry
+                .path()
+                .extension()
+                .map(|ext| ext.to_string_lossy().into_owned())
+                .unwrap_or_else(|| "".to_string());
+
+            self.update_hasmap(extension, processed_file_info);
+        }
+
+        if metadata.is_dir()
+            && self.is_recursive
+            && !self.is_forbidden_directories(dir_entry.path())
+        {
+            self.search_dir(dir_entry.path());
         }
     }
-    false
+
+    fn update_hasmap(&mut self, extension: String, file_info: FileInfo) {
+        let key_from_informações_result = self.result.get_mut(&extension);
+
+        match key_from_informações_result {
+            Some(file_info_old) => *file_info_old += file_info,
+            None => {
+                self.result.insert(extension, file_info);
+            }
+        }
+    }
+
+    fn get_metadata(file: &DirEntry) -> Metadata {
+        match file.metadata() {
+            Ok(metadata) => metadata,
+            Err(metadata_error) => panic!("Erro ao pegar metadata: {metadata_error}"),
+        }
+    }
+
+    fn is_readable(file_path: PathBuf) -> bool {
+        File::open(file_path)
+            .and_then(|mut file| {
+                let mut buffer = String::new();
+                file.read_to_string(&mut buffer)
+            })
+            .is_ok()
+    }
+
+    fn is_forbidden_directories(&self, entry_path: PathBuf) -> bool {
+        if let Some(path_str) = entry_path.to_str() {
+            for element in &self.ignored_directories {
+                if path_str.contains(element) {
+                    return true;
+                }
+            }
+        }
+        false
+    }
 }
