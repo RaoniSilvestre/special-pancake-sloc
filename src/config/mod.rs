@@ -11,10 +11,9 @@ pub struct Configuration {
 #[command(version, about, long_about = None)]
 pub struct Arguments {
     #[arg(short = 'r', long)]
-    pub recursive: Option<bool>,
+    pub recursive: bool,
 
-    #[arg(short = 'p', long)]
     pub path: String,
 }
 
-pub mod config;
+mod configuration;
