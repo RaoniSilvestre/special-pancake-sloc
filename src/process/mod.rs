@@ -1,3 +1,3 @@
-pub struct Processor {}
+pub struct Processor;
 
-mod process;
+mod processor;

@@ -29,7 +29,7 @@ impl Processor {
         let mut file_info = FileInfo::default();
         let trimmed_line = line.trim();
 
-        if trimmed_line.starts_with("#") || trimmed_line.starts_with("//") {
+        if trimmed_line.starts_with('#') || trimmed_line.starts_with("//") {
             file_info.comment += 1;
         } else if trimmed_line.is_empty() {
             file_info.whitespace += 1;
