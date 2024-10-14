@@ -1,7 +1,7 @@
 use crate::infra::FileInfo;
 use std::{collections::BTreeMap, path::PathBuf};
 
-pub mod search;
+mod searcher;
 
 #[derive(Debug)]
 pub struct Searcher {

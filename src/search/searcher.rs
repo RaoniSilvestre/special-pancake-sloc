@@ -18,7 +18,7 @@ impl Searcher {
     pub fn new(configuration: Configuration) -> Searcher {
         let ignored_directories = vec!["/target", "/.git", "/node_modules"]
             .into_iter()
-            .map(|str| String::from(str))
+            .map(String::from)
             .collect();
 
         Searcher {
@@ -32,14 +32,14 @@ impl Searcher {
     pub fn search(&mut self) {
         match read_dir(&self.root_path) {
             Ok(directory_iterator) => self.iterate(directory_iterator),
-            Err(_) => (),
+            Err(error) => eprintln!("{error}"),
         }
     }
 
     fn search_dir(&mut self, directory: PathBuf) {
-        match read_dir(&directory) {
+        match read_dir(directory) {
             Ok(directory_iterator) => self.iterate(directory_iterator),
-            Err(_) => (),
+            Err(error) => eprintln!("{error}"),
         }
     }
 
@@ -71,7 +71,7 @@ impl Searcher {
                 .path()
                 .extension()
                 .map(|ext| ext.to_string_lossy().into_owned())
-                .unwrap_or_else(|| "".to_string());
+                .unwrap_or_default();
 
             self.update_hasmap(extension, processed_file_info);
         }
