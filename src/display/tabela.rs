@@ -1,16 +1,16 @@
-use std::collections::BTreeMap;
+use std::{collections::BTreeMap, fmt::Display};
 
-use super::Display;
+use super::Tabela;
 use crate::infra::FileInfo;
 
-impl Display {
+impl Tabela {
     fn ln() {
         println!(
         "--------------------------------------------------------------------------------------------------------"
     );
     }
 
-    pub fn print_info(informações: BTreeMap<String, FileInfo>) {
+    pub fn print_info<T: Display>(informações: BTreeMap<T, FileInfo>) {
         let extensão = "extensão";
         let comments = "comentários";
         let code = "códigos";
@@ -35,6 +35,8 @@ impl Display {
                 chave, valor.code, valor.comment, valor.whitespace
             )
         }
+
+        Self::ln();
 
         println!(
             "| {:<36} | {:<18} | {:<18} | {:<18} |",

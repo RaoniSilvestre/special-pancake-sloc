@@ -1,4 +1,4 @@
 #[derive(Debug)]
-pub struct Display;
+pub struct Tabela;
 
-pub mod display;
+pub mod tabela;
