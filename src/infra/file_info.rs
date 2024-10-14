@@ -23,16 +23,6 @@ impl FileInfo {
     }
 }
 
-impl Default for FileInfo {
-    fn default() -> Self {
-        FileInfo {
-            code: 0,
-            whitespace: 0,
-            comment: 0,
-        }
-    }
-}
-
 impl AddAssign for FileInfo {
     fn add_assign(&mut self, rhs: Self) {
         self.code += rhs.code;
